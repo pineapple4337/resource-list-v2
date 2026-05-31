@@ -20,7 +20,7 @@
             </div>
             
             <nav class="flex space-x-1 bg-slate-100 p-1 rounded-xl">
-                <template x-for="tab in ['Funds', 'Venues', 'Ecosystem', 'Logger']">
+                <template x-for="tab in ['Ecosystem', 'Venues', 'Logger', 'Funds']">
                     <button 
                         @click="activeTab = tab.toLowerCase(); searchQuery = '';"
                         :class="activeTab === tab.toLowerCase() ? 'bg-white text-teal-700 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-teal-600'"
@@ -86,26 +86,14 @@
                     <table class="min-w-full table-auto divide-y divide-slate-200 text-left text-sm whitespace-nowrap">
                         <thead class="bg-slate-50 font-semibold text-slate-500 uppercase tracking-wider text-[10px] select-none">
                             <tr>
-                                <th @click="sortBy('name')" class="px-6 py-4 cursor-pointer hover:bg-teal-50 transition min-w-[200px]">
-                                    <div class="flex items-center space-x-1">
-                                        <span>Name</span>
-                                        <span x-show="sortColumn === 'name'" x-text="sortAscending ? '▲' : '▼'" class="text-teal-600 text-[8px]"></span>
-                                    </div>
-                                </th>
-                                <th class="px-6 py-4 cursor-pointer hover:bg-teal-50 transition min-w-[200px]"
-                                    @click="sortBy(activeTab === 'funds' ? 'about' : (activeTab === 'ecosystem' ? 'type' : 'location'))">
-                                    <div class="flex items-center space-x-1">
-                                        <span x-text="activeTab === 'funds' ? 'About' : (activeTab === 'ecosystem' ? 'Type' : 'Location')"></span>
-                                        <span x-show="['about', 'type', 'location'].includes(sortColumn)" x-text="sortAscending ? '▲' : '▼'" class="text-teal-600 text-[8px]"></span>
-                                    </div>
-                                </th>
-                                <th class="px-6 py-4 cursor-pointer hover:bg-teal-50 transition min-w-[250px]"
-                                    @click="sortBy(activeTab === 'funds' ? 'general_requirements' : (activeTab === 'ecosystem' ? 'location' : 'capacity'))">
-                                    <div class="flex items-center space-x-1">
-                                        <span x-text="activeTab === 'funds' ? 'Requirements' : (activeTab === 'ecosystem' ? 'Location' : 'Region / Capacity')"></span>
-                                        <span x-show="['general_requirements', 'location', 'capacity'].includes(sortColumn)" x-text="sortAscending ? '▲' : '▼'" class="text-teal-600 text-[8px]"></span>
-                                    </div>
-                                </th>
+                                <template x-for="(headerTitle, index) in schema[activeTab]?.headers" :key="headerTitle">
+                                    <th @click="sortBy(schema[activeTab].fields[index])" class="px-6 py-4 cursor-pointer hover:bg-teal-50 transition">
+                                        <div class="flex items-center space-x-1">
+                                            <span x-text="headerTitle"></span>
+                                            <span x-show="sortColumn === schema[activeTab].fields[index]" x-text="sortAscending ? '▲' : '▼'" class="text-teal-600 text-[8px]"></span>
+                                        </div>
+                                    </th>
+                                </template>
                                 <th @click="sortBy('total_engagements')" class="px-6 py-4 text-center cursor-pointer hover:bg-teal-50 transition min-w-[120px]">
                                     <div class="flex items-center justify-center space-x-1">
                                         <span>Engagements</span>
@@ -118,9 +106,12 @@
                         <tbody class="divide-y divide-slate-200">
                             <template x-for="item in paginatedData()" :key="item.name">
                                 <tr @click="openProfile(item)" class="even:bg-slate-50/40 hover:bg-teal-50/40 cursor-pointer transition">
-                                    <td class="px-6 py-4 font-semibold text-teal-700" x-text="item.name"></td>
-                                    <td class="px-6 py-4 text-slate-500" x-text="activeTab === 'funds' ? item.about : (activeTab === 'ecosystem' ? item.type : item.location || '—')"></td>
-                                    <td class="px-6 py-4 text-slate-500" x-text="activeTab === 'funds' ? item.general_requirements : (activeTab === 'ecosystem' ? item.location : (item.region ? '[' + item.region + '] ' : '') + (item.capacity ? item.capacity + ' pax' : '—'))"></td>
+                                    <template x-for="(fieldKey, index) in schema[activeTab]?.fields">
+                                        <td class="px-6 py-4 text-sm" 
+                                            :class="index === 0 ? 'font-semibold text-teal-700' : 'text-slate-500'"
+                                            x-text="fieldKey === 'capacity' && item.region ? `[${item.region}] ${item.capacity || 0} pax` : (item[fieldKey] || '—')">
+                                        </td>
+                                    </template>
                                     <td class="px-6 py-4 text-center">
                                         <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold text-xs border border-emerald-100" x-text="item.total_engagements"></span>
                                     </td>
@@ -307,49 +298,16 @@
                 <div class="md:col-span-2 space-y-6">
                     <div>
                         <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 border-b pb-2 mb-3">Details</h4>
-                        
-                        <template x-if="activeTab === 'funds'">
-                            <div class="grid grid-cols-1 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div>
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">About</span>
-                                    <div class="text-sm font-medium text-slate-800 whitespace-pre-wrap mt-1" x-text="selectedItem.about || '—'"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <template x-for="(fieldKey, idx) in schema[activeTab]?.fields" :key="fieldKey">
+                                <div :class="fieldKey === 'general_requirements' || fieldKey === 'about' ? 'md:col-span-2' : ''">
+                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400" x-text="schema[activeTab].headers[idx]"></span>
+                                    <div class="text-sm font-medium text-slate-800 whitespace-pre-wrap mt-1" 
+                                         x-text="fieldKey === 'capacity' && selectedItem.region ? `[${selectedItem.region}] ${selectedItem.capacity || 0} pax` : (selectedItem[fieldKey] || '—')">
+                                    </div>
                                 </div>
-                                <div>
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Requirements</span>
-                                    <div class="text-sm font-medium text-slate-800 whitespace-pre-wrap mt-1" x-text="selectedItem.general_requirements || '—'"></div>
-                                </div>
-                            </div>
-                        </template>
-
-                        <template x-if="activeTab === 'venues'">
-                            <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div>
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Region</span>
-                                    <span class="text-sm font-semibold text-slate-800" x-text="selectedItem.region || '—'"></span>
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Capacity</span>
-                                    <span class="text-sm font-semibold text-slate-800" x-text="selectedItem.capacity ? selectedItem.capacity + ' pax' : '—'"></span>
-                                </div>
-                                <div class="col-span-2">
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Location Address</span>
-                                    <span class="text-sm font-medium text-slate-700" x-text="selectedItem.location || '—'"></span>
-                                </div>
-                            </div>
-                        </template>
-
-                        <template x-if="activeTab === 'ecosystem'">
-                            <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div>
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Type</span>
-                                    <span class="text-sm font-semibold text-slate-800" x-text="selectedItem.type || '—'"></span>
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Location Address</span>
-                                    <span class="text-sm font-medium text-slate-700" x-text="selectedItem.location || '—'"></span>
-                                </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
 
                     <div>
@@ -361,7 +319,7 @@
                                         <div class="flex items-center space-x-2">
                                             <span class="font-bold text-slate-800" x-text="log.username"></span>
                                             <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" 
-                                                :class="log.sentiment === 'Good' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (log.sentiment === 'Bad' ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-teal-50 text-teal-700 border border-teal-200')"
+                                                :class="log.sentiment === 'Good' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (log.sentiment === 'Bad' ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-amber-50 text-amber-700 border border-amber-200')"
                                                 x-text="log.sentiment"></span>
                                         </div>
                                         <span class="text-[10px] font-semibold text-slate-400" x-text="formatDateString(log.timestamp)"></span>
@@ -505,13 +463,20 @@
             const norm = s => String(s || '').trim().toLowerCase();
 
             return {
-                activeTab: 'funds', 
+                activeTab: 'ecosystem', // Resources landing page as requested
                 searchQuery: '',
                 selectedTypeFilter: '',
                 currentPage: 1,
                 itemsPerPage: 10,
                 sortColumn: 'name',
                 sortAscending: true,
+
+                // Dynamic schema engine to replace multi-template conditions
+                schema: {
+                    ecosystem: { label: 'Resource', headers: ['Name', 'Type', 'Location Address'], fields: ['name', 'type', 'location'] },
+                    venues: { label: 'Venue', headers: ['Name', 'Location', 'Region / Capacity'], fields: ['name', 'location', 'capacity'] },
+                    funds: { label: 'Fund', headers: ['Name', 'About', 'Requirements'], fields: ['name', 'about', 'general_requirements'] }
+                },
 
                 funds: [],
                 venues: [],
@@ -671,15 +636,12 @@
                         latest_engagement: null
                     };
 
-                    if (type === 'funds') {
-                        payload.about = norm(this.creationForm.about);
-                        payload.general_requirements = norm(this.creationForm.general_requirements);
-                    } else if (type === 'venues') {
-                        payload = { ...payload, region: this.creationForm.region, capacity: norm(this.creationForm.capacity), location: norm(this.creationForm.location) };
-                    } else if (type === 'ecosystem') {
-                        payload = { ...payload, type: norm(this.creationForm.type), location: norm(this.creationForm.location) };
-                    }
-
+                    // Dynamically map fields that exist on the creation form tracking layout
+                    this.schema[type].fields.forEach(f => {
+                        if (this.creationForm[f]) payload[f] = norm(this.creationForm[f]);
+                    });
+                    if (type === 'venues') payload.region = this.creationForm.region;
+                    
                     if (this.findByName(type, payload.name)) return alert("Record already exists.");
 
                     try {
@@ -704,7 +666,7 @@
 
                 sentimentClasses(s) {
                     if (s === 'Good') return 'bg-emerald-600 text-white';
-                    if (s === 'Neutral') return 'bg-teal-600 text-white';
+                    if (s === 'Neutral') return 'bg-amber-500 text-white'; // Warm yellow-orange accent
                     return 'bg-rose-600 text-white';
                 },
 
