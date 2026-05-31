@@ -42,7 +42,7 @@
                     </div>
                     <div class="min-w-0">
                         <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Total Resources</span>
-                        <span class="text-2xl font-bold text-slate-800" x-text="db.ecosystem.length">0</span>
+                        <span class="text-2xl font-bold text-slate-800" x-text="ecosystem.length">0</span>
                     </div>
                 </div>
             
@@ -52,7 +52,7 @@
                     </div>
                     <div class="min-w-0">
                         <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Active Funds</span>
-                        <span class="text-2xl font-bold text-slate-800" x-text="db.funds.length">0</span>
+                        <span class="text-2xl font-bold text-slate-800" x-text="funds.length">0</span>
                     </div>
                 </div>
             
@@ -62,7 +62,7 @@
                     </div>
                     <div class="min-w-0">
                         <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Total Logged</span>
-                        <span class="text-2xl font-bold text-slate-800" x-text="db.logger.length">0</span>
+                        <span class="text-2xl font-bold text-slate-800" x-text="(historicalLogs || []).length">0</span>
                     </div>
                 </div>
             
@@ -72,7 +72,7 @@
                     </div>
                     <div class="min-w-0">
                         <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Unresolved/Bad</span>
-                        <span class="text-2xl font-bold text-slate-800" x-text="db.logger.filter(l => l.sentiment === 'Bad').length">0</span>
+                        <span class="text-2xl font-bold text-slate-800" x-text="(historicalLogs || []).filter(l => l.sentiment === 'Bad').length">0</span>
                     </div>
                 </div>
             </div>
@@ -523,6 +523,7 @@
                 venues: [],
                 ecosystem: [],
                 currentProfileLogs: [],
+                historicalLogs: [],
 
                 creationModalOpen: false,
                 mappingModalOpen: false,
