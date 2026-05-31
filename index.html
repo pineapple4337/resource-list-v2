@@ -20,7 +20,7 @@
             </div>
             
             <nav class="flex space-x-1 bg-slate-100 p-1 rounded-xl">
-                <template x-for="tab in ['Ecosystem', 'Venues', 'Logger', 'Funds']">
+                <template x-for="tab in ['Ecosystem', 'Venues', 'Funds', 'Logger']">
                     <button 
                         @click="activeTab = tab.toLowerCase(); searchQuery = '';"
                         :class="activeTab === tab.toLowerCase() ? 'bg-white text-teal-700 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-teal-600'"
@@ -116,9 +116,9 @@
                                         <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold text-xs border border-emerald-100" x-text="item.total_engagements"></span>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-1 max-w-[200px]">
+                                        <div class="flex flex-wrap gap-1.5 max-w-[240px]">
                                             <template x-for="tag in getArrayFromTags(item.tags)" :key="tag">
-                                                <span class="px-1.5 py-0.5 bg-teal-50 text-teal-700 rounded text-[9px] font-medium border border-teal-100" x-text="tag"></span>
+                                                <span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded text-xs font-semibold border border-teal-100 tracking-wide" x-text="tag"></span>
                                             </template>
                                             <span x-show="!item.tags || getArrayFromTags(item.tags).length === 0" class="text-slate-300 text-xs italic">None</span>
                                         </div>
@@ -339,9 +339,9 @@
                 <div class="space-y-6 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6">
                     <div>
                         <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Tags</h4>
-                        <div class="flex flex-wrap gap-1.5">
+                        <div class="flex flex-wrap gap-2">
                             <template x-for="tag in getArrayFromTags(selectedItem.tags)" :key="tag">
-                                <span class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 rounded text-xs font-medium" x-text="tag"></span>
+                                <span class="px-3 py-1 bg-teal-50 text-teal-700 border border-teal-100 rounded-lg text-sm font-semibold tracking-wide" x-text="tag"></span>
                             </template>
                             <span x-show="!selectedItem.tags || getArrayFromTags(selectedItem.tags).length === 0" class="text-xs text-slate-400 italic">No tags associated</span>
                         </div>
