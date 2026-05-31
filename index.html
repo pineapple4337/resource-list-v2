@@ -354,7 +354,7 @@
                     <div>
                         <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 border-b pb-2 mb-3">All Engagement History Logs</h4>
                         <div class="space-y-3 max-h-64 overflow-y-auto pr-2">
-                            <template x-for="log in historicalLogs" :key="log.id">
+                            <template x-for="log in currentProfileLogs" :key="log.id">
                                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs shadow-sm flex flex-col space-y-2">
                                     <div class="flex justify-between items-center">
                                         <div class="flex items-center space-x-2">
@@ -368,7 +368,7 @@
                                     <p class="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap" x-text="log.notes || 'No extended notes provided for this engagement.'"></p>
                                 </div>
                             </template>
-                            <template x-if="historicalLogs.length === 0">
+                            <template x-if="currentProfileLogs.length === 0">
                                 <div class="text-center py-6 border border-dashed border-slate-300 rounded-xl text-slate-400 italic text-xs">
                                     No historical logs matching this profile exist in the tracking index.
                                 </div>
@@ -522,7 +522,7 @@
                 funds: [],
                 venues: [],
                 ecosystem: [],
-                historicalLogs: [],
+                currentProfileLogs: [],
 
                 creationModalOpen: false,
                 mappingModalOpen: false,
@@ -542,6 +542,16 @@
 
                 async init() {
                     await this.syncFromBackend();
+                    // Load global historical logs for the dashboard counter immediately on startup
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from('logs')
+                            .select('*')
+                            .order('timestamp', { ascending: false });
+                        if (!error) this.historicalLogs = data || [];
+                    } catch (err) {
+                        console.error("Initial logs fetch failure:", err);
+                    }
                     this.$watch('activeTab', () => { this.currentPage = 1; this.selectedTypeFilter = ''; });
                     this.$watch('searchQuery', () => { this.currentPage = 1; });
                 },
@@ -622,9 +632,9 @@
 
                 async openProfile(item) {
                     this.selectedItem = { ...item };
-                    this.historicalLogs = [];
                     this.profileModalOpen = true;
 
+                    // Filter down your pre-loaded logs to show only those matching this profile's name
                     try {
                         const { data, error } = await supabaseClient
                             .from('logs')
@@ -632,10 +642,12 @@
                             .eq('name', item.name)
                             .order('timestamp', { ascending: false });
                         
-                        if (error) throw error;
-                        this.historicalLogs = data || [];
+                        if (!error) {
+                            // Temporary local view for this modal overlay pop-up
+                            this.currentProfileLogs = data || [];
+                        }
                     } catch (err) {
-                        console.error("Failed to parse engagement database logs:", err);
+                        console.error("Failed to parse profile modal database logs:", err);
                     }
                 },
 
